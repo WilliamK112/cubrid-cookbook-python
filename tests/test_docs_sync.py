@@ -94,7 +94,6 @@ class PitfallsGateTests(unittest.TestCase):
             self.assertEqual(find_undocumented(examples, ""), [])
 
 
-
 class NestedRecipeSmokeCoverageTests(unittest.TestCase):
     """A tested sibling must not hide an untested Flask or FastAPI recipe."""
 
