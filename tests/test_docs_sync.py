@@ -27,6 +27,7 @@ from scripts import check_docs_sync  # noqa: E402
 from scripts.check_docs_sync import (  # noqa: E402
     discover_examples,
     find_undocumented,
+    find_untested,
     load_allowlist,
 )
 
@@ -91,6 +92,64 @@ class PitfallsGateTests(unittest.TestCase):
             (pitfalls / "README.md").write_text("# Pitfalls\n")
             examples = discover_examples(repo_root)
             self.assertEqual(find_undocumented(examples, ""), [])
+
+
+
+class NestedRecipeSmokeCoverageTests(unittest.TestCase):
+    """A tested sibling must not hide an untested Flask or FastAPI recipe."""
+
+    @staticmethod
+    def make_recipe(root: Path, family: str, name: str, coverage: str | None = None) -> None:
+        recipe = root / family / name
+        recipe.mkdir(parents=True)
+        (recipe / "app.py").write_text("# example\n", encoding="utf-8")
+        if coverage:
+            (recipe / coverage).mkdir()
+
+    def test_nested_recipes_are_checked_independently(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for family in ("templates/flask", "templates/api-service-fastapi/recipes"):
+                self.make_recipe(root, family, "01-tested", "tests")
+                self.make_recipe(root, family, "02-golden", "expected")
+                self.make_recipe(root, family, "03-missing")
+                notes = root / family / "04-docs-only"
+                notes.mkdir()
+                (notes / "README.md").write_text("no runnable code\n", encoding="utf-8")
+
+            examples = discover_examples(root)
+            missing = find_untested(root, examples, set())
+            self.assertEqual(
+                missing,
+                [
+                    "templates/flask/03-missing",
+                    "templates/api-service-fastapi/recipes/03-missing",
+                ],
+            )
+            self.assertEqual(
+                find_untested(root, examples, {"templates/flask/03-missing"}),
+                ["templates/api-service-fastapi/recipes/03-missing"],
+            )
+
+    def test_main_warns_about_nested_missing_test_without_failing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_recipe(root, "templates/flask", "01-tested", "tests")
+            self.make_recipe(root, "templates/flask", "02-missing")
+            (root / "scripts").mkdir()
+            (root / "README.md").write_text("templates/flask\n", encoding="utf-8")
+            (root / "llms.txt").write_text("templates/flask\n", encoding="utf-8")
+            fake_script = root / "scripts" / "check_docs_sync.py"
+
+            with (
+                mock.patch.object(check_docs_sync, "__file__", str(fake_script)),
+                mock.patch("sys.stdout", new_callable=io.StringIO) as out,
+            ):
+                self.assertEqual(check_docs_sync.main(), 0)
+
+            self.assertIn("WARN: examples without smoke coverage", out.getvalue())
+            self.assertIn("templates/flask/02-missing", out.getvalue())
+            self.assertNotIn("ERROR: examples missing", out.getvalue())
 
 
 class AllowlistReasonTests(unittest.TestCase):
