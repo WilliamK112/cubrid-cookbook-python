@@ -804,6 +804,10 @@ class MakeTargetSemanticsTests(unittest.TestCase):
         commands = listed.stdout.splitlines()
         self.assertIn("bash tests/test_normalize_output.sh", commands)
         self.assertIn(
+            f"{sys.executable} -m pytest templates/ai-agent/tests/test_offline.py -q",
+            commands,
+        )
+        self.assertIn(
             f"{sys.executable} -m unittest discover -s tests -p test_make_commands.py -v",
             commands,
         )

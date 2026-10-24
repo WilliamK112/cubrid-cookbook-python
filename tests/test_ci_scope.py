@@ -131,6 +131,7 @@ class ClassifierTests(unittest.TestCase):
         cases = {
             "templates/ai-agent/03_rag_metadata.py": "ai-agent",
             "templates/ai-agent/tests/test_live.py": "ai-agent",
+            "templates/ai-agent/tests/test_offline.py": "ai-agent",
             "performance/bulk-insert/benchmark.py": "performance",
             "performance/tests/test_benchmarks.py": "performance",
             "quickstart/5min-fastapi/app.py": "quickstart",
