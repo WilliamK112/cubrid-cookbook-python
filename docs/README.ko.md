@@ -176,6 +176,8 @@ make docker-down    # 중지; 데이터베이스는 Docker 볼륨에 남음
 make docker-clean   # 파괴적: 컨테이너와 볼륨을 데이터베이스까지 삭제
 ```
 
+체크아웃 검증의 표준 순서는 `make test`(오프라인, 결과는 `test-results/test/`) 다음 `make verify`(전체 라이브 검증, [CONTRIBUTING.md](https://github.com/cubrid-lab/cubrid-cookbook-python/blob/main/CONTRIBUTING.md#live-verification) 참조)입니다. 개별 `verify-*` 레인은 디버깅용이며 `PARTIAL`을 출력하고, [고급 디버깅 레인](https://github.com/cubrid-lab/cubrid-cookbook-python/blob/main/CONTRIBUTING.md#advanced-debugging-lanes)에 정리되어 있습니다.
+
 `make up`과 `make down`은 `make docker-up`과 `make docker-down`의 별칭으로 남아 있습니다.
 브로커는 `127.0.0.1`에서만 대기합니다. `CUBRID_TEST_PORT`로 다른 호스트 포트에 공개할 수
 있지만 예제는 `33000`에 연결하므로, 예제를 실행할 때는 설정하지 마세요.

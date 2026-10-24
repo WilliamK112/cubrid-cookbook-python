@@ -149,24 +149,14 @@ until you do.
 
 ### Live verification
 
-`make test` needs no database. `make verify` is the full live verification: it
+The standard sequence is `make test` (offline, no database), then `make verify`.
+`make verify` is the full live verification: it
 runs `scripts/live_gate.py all`, which reruns every golden and every existing live
 pytest suite (it adds no test of its own; each suite runs in its own pytest
 process) against real CUBRID databases, fails closed, and records what ran (#416).
 
-| Lane (`make` target) | What runs | Database |
-|----------------------|-----------|----------|
-| goldens (`verify-goldens`) | every `expected/*.expected` golden, see [Golden Verification](#golden-verification) | the `make docker-up` database |
-| `verify-quickstart` | `quickstart/5min-fastapi/tests/test_live.py`: `/health` and CRUD (#420) | the `make docker-up` database (the app connects to port 33000 and `testdb` only); it keeps its own `cookbook_quickstart_items` table |
-| `verify-performance` | `tests/test_performance_benchmarks.py`: the five migration goldens and the three benchmarks (#423), see [Performance and migration lane](#performance-and-migration-lane) | the `make docker-up` database (the scripts hard-code it) |
-| `verify-web` | `templates/flask/*/tests`, `templates/api-service-fastapi/recipes/*/tests`; `templates/api-service-fastapi/tests` (root template startup and `/health`) | `CUBRID_TEST_URL`; the root template test uses SQLite by design and is reported as startup-only, not live evidence or quickstart coverage |
-| `verify-django-celery` | `templates/django/tests`, `templates/async-worker/tests` | `CUBRID_TEST_URL`; Celery tasks run directly (`.run()` / eager `.apply()`), without Redis or a worker |
-| `verify-ai-agent` | `tests/test_ai_agent.py`: agent state, MCP tools and RAG, each script run twice (#422) | `CUBRID_TEST_URL` |
-| `verify-dashboard` | `templates/dashboard/tests` | `CUBRID_DASHBOARD_TEST_URL`: the suite drops and recreates its FK-linked tables |
-
-`make verify` runs the lanes in this order, one at a time, so suites with fixed
-table names never overlap; `make verify-templates` runs `verify-web`,
-`verify-django-celery` and `verify-dashboard`. Each lane can also run on its own.
+`make verify` runs the lanes listed under [Advanced debugging lanes](#advanced-debugging-lanes)
+in that order, one at a time, so suites with fixed table names never overlap.
 The goldens leave their fixed tables in the `make docker-up` database, so
 `CUBRID_TEST_URL` and `CUBRID_DASHBOARD_TEST_URL` must name two further dedicated,
 empty databases, distinct from each other and from the `make docker-up` database:
@@ -244,6 +234,24 @@ full `make verify` on CUBRID 11.2 and 11.4, and the pull-request smoke lanes run
 `make verify-goldens VERIFY_PATHS=<roots>` and the focused `verify-*` lanes their
 changed paths select (see [CI tiers](#ci-tiers)). The other pull-request recipe
 jobs keep their own per-recipe environments.
+
+### Advanced debugging lanes
+
+Use these to debug one family after `make test` and `make verify` (or instead of a
+full run while iterating). Each lane runs on its own, prints `PARTIAL`, and a pass
+is never the full verification (see the `PARTIAL` rules above). `make verify-templates`
+runs `verify-web`, `verify-django-celery` and `verify-dashboard`; `make demo` starts
+the database and runs `verify-goldens`.
+
+| Lane (`make` target) | What runs | Database |
+|----------------------|-----------|----------|
+| goldens (`verify-goldens`) | every `expected/*.expected` golden, see [Golden Verification](#golden-verification) | the `make docker-up` database |
+| `verify-quickstart` | `quickstart/5min-fastapi/tests/test_live.py`: `/health` and CRUD (#420) | the `make docker-up` database (the app connects to port 33000 and `testdb` only); it keeps its own `cookbook_quickstart_items` table |
+| `verify-performance` | `tests/test_performance_benchmarks.py`: the five migration goldens and the three benchmarks (#423), see [Performance and migration lane](#performance-and-migration-lane) | the `make docker-up` database (the scripts hard-code it) |
+| `verify-web` | `templates/flask/*/tests`, `templates/api-service-fastapi/recipes/*/tests`; `templates/api-service-fastapi/tests` (root template startup and `/health`) | `CUBRID_TEST_URL`; the root template test uses SQLite by design and is reported as startup-only, not live evidence or quickstart coverage |
+| `verify-django-celery` | `templates/django/tests`, `templates/async-worker/tests` | `CUBRID_TEST_URL`; Celery tasks run directly (`.run()` / eager `.apply()`), without Redis or a worker |
+| `verify-ai-agent` | `tests/test_ai_agent.py`: agent state, MCP tools and RAG, each script run twice (#422) | `CUBRID_TEST_URL` |
+| `verify-dashboard` | `templates/dashboard/tests` | `CUBRID_DASHBOARD_TEST_URL`: the suite drops and recreates its FK-linked tables |
 
 ### CI tiers
 

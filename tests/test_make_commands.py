@@ -895,15 +895,45 @@ class MakeTargetSemanticsTests(unittest.TestCase):
             "Database",
             "Offline tests",
             "Live verification",
+            "Advanced / debugging lanes",
             "Quality checks",
             "Documentation",
         ]
         positions = [text.index(group) for group in groups]
         self.assertEqual(positions, sorted(positions))
         for group, target in zip(
-            groups, ("docker-clean", "test-offline", "verify-goldens", "format-check", "docs-check")
+            groups,
+            (
+                "docker-clean",
+                "test-offline",
+                "verify-goldens",
+                "verify-goldens",
+                "format-check",
+                "docs-check",
+            ),
         ):
             self.assertLess(text.index(group), text.index(target))
+        # make verify sits in the primary group; the partial lanes are only in the advanced one
+        live = text.index("Live verification")
+        advanced = text.index("Advanced / debugging lanes")
+        quality = text.index("Quality checks")
+        primary = text[live:advanced]
+        self.assertRegex(primary, r"\x1b\[36mverify\s+\x1b\[0m")
+        lanes = text[advanced:quality]
+        for lane in (
+            "verify-goldens",
+            "verify-quickstart",
+            "verify-performance",
+            "verify-web",
+            "verify-django-celery",
+            "verify-ai-agent",
+            "verify-dashboard",
+            "verify-templates",
+        ):
+            with self.subTest(lane=lane):
+                self.assertNotIn(lane, primary)
+                self.assertIn(lane, lanes)
+        self.assertIn("PARTIAL", text[advanced : advanced + 200])
 
 
 class ComposeContractTests(unittest.TestCase):

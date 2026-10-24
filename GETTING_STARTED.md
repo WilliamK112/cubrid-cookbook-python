@@ -120,14 +120,24 @@ Use a Python 3.11+ virtual environment:
 ```bash
 python3 -m venv .venv && source .venv/bin/activate   # Python 3.11 or later
 make deps                     # drivers, pytest and every example's requirements
-make test                     # unit and mocked tests: no database, no Docker
+make test                     # 1. unit and mocked tests: no database, no Docker
 make docker-up                # start CUBRID and wait until it is ready
-make verify-goldens           # runs every golden-backed example against your local CUBRID
+make verify                   # 2. full live verification (needs two more databases, see below)
 ```
 
-`make deps` installs everything in one pip call and honours `PIP_CONSTRAINT`. `make verify-goldens` stops early with "run `make deps` first" when an example requirement is missing, limits each script to `VERIFY_TIMEOUT` seconds (default 60), and reports each result as pass, mismatch, exec error, timeout, normalizer/read error or skip.
+The standard sequence is `make test`, then `make verify`. `make deps` installs everything in one pip call and honours `PIP_CONSTRAINT`. `make test` writes its results to `test-results/test/` (`summary.json` and one JUnit file per suite).
 
-`make verify` is the full live verification: every golden plus the FastAPI quickstart, Flask/FastAPI, Django/Celery, Streamlit, AI agent/MCP/RAG, migration and performance suites. Besides the `make docker-up` database it needs two dedicated, empty CUBRID databases in `CUBRID_TEST_URL` and `CUBRID_DASHBOARD_TEST_URL`, fails if anything is unreachable, skipped or missing, and writes its results to `.live-evidence/`. [CONTRIBUTING.md](CONTRIBUTING.md#live-verification) shows how to start them and how to run a single suite (`make verify-web`, `make verify-ai-agent`, …).
+`make verify` is the full live verification: every golden plus the FastAPI quickstart, Flask/FastAPI, Django/Celery, Streamlit, AI agent/MCP/RAG, migration and performance suites. Besides the `make docker-up` database it needs two dedicated, empty CUBRID databases in `CUBRID_TEST_URL` and `CUBRID_DASHBOARD_TEST_URL`, fails if anything is unreachable, skipped or missing, and writes its results to `.live-evidence/`. [CONTRIBUTING.md](CONTRIBUTING.md#live-verification) shows how to start them.
+
+### Advanced: debugging lanes
+
+To check only the examples you changed, run the partial lanes. They print a `PARTIAL: ...` line, because a pass from them is not the full verification; only a complete `make verify` is.
+
+```bash
+make verify-goldens           # runs every golden-backed example against your local CUBRID (VERIFY_PATHS=<dir> narrows it)
+```
+
+`make verify-goldens` stops early with "run `make deps` first" when an example requirement is missing, limits each script to `VERIFY_TIMEOUT` seconds (default 60), and reports each result as pass, mismatch, exec error, timeout, normalizer/read error or skip. The suite lanes (`make verify-web`, `make verify-ai-agent`, …) are listed in [CONTRIBUTING.md](CONTRIBUTING.md#advanced-debugging-lanes).
 
 ## Where to go next
 

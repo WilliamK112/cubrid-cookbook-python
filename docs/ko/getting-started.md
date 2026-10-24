@@ -118,14 +118,24 @@ Python 3.11 이상의 가상 환경을 사용하세요:
 ```bash
 python3 -m venv .venv && source .venv/bin/activate   # Python 3.11 이상
 make deps                     # 드라이버, pytest, 모든 예제의 requirements
-make test                     # 단위·모의 테스트: 데이터베이스와 Docker 불필요
+make test                     # 1. 단위·모의 테스트: 데이터베이스와 Docker 불필요
 make docker-up                # CUBRID를 시작하고 준비될 때까지 대기
-make verify-goldens           # 골든 기반 모든 예제를 로컬 CUBRID에 대해 실행
+make verify                   # 2. 전체 라이브 검증 (데이터베이스 두 개가 더 필요, 아래 참조)
 ```
 
-`make deps`는 한 번의 pip 호출로 모두 설치하며 `PIP_CONSTRAINT`를 따릅니다. `make verify-goldens`는 예제 요구 패키지가 빠져 있으면 "run `make deps` first"를 출력하고 바로 멈추며, 스크립트마다 `VERIFY_TIMEOUT`초(기본 60)로 실행 시간을 제한하고, 결과를 통과·불일치(mismatch)·실행 오류·타임아웃·정규화/읽기 오류·건너뜀으로 구분해 보고합니다.
+표준 순서는 `make test` 다음 `make verify`입니다. `make deps`는 한 번의 pip 호출로 모두 설치하며 `PIP_CONSTRAINT`를 따릅니다. `make test`는 결과를 `test-results/test/`(`summary.json`과 묶음별 JUnit 파일)에 기록합니다.
 
-`make verify`는 전체 라이브 검증입니다. 모든 골든에 더해 FastAPI 퀵스타트, Flask/FastAPI, Django/Celery, Streamlit, AI 에이전트/MCP/RAG, 마이그레이션, 성능 테스트 묶음을 실행합니다. `make docker-up` 데이터베이스 외에 `CUBRID_TEST_URL`과 `CUBRID_DASHBOARD_TEST_URL`에 전용 빈 CUBRID 데이터베이스 두 개가 필요하며, 연결할 수 없거나 건너뛴 테스트·빠진 패키지가 있으면 실패하고, 결과를 `.live-evidence/`에 기록합니다. 데이터베이스를 띄우는 방법과 테스트 묶음 하나만 실행하는 방법(`make verify-web`, `make verify-ai-agent` 등)은 [CONTRIBUTING.md](https://github.com/cubrid-lab/cubrid-cookbook-python/blob/main/CONTRIBUTING.md#live-verification)를 참고하세요.
+`make verify`는 전체 라이브 검증입니다. 모든 골든에 더해 FastAPI 퀵스타트, Flask/FastAPI, Django/Celery, Streamlit, AI 에이전트/MCP/RAG, 마이그레이션, 성능 테스트 묶음을 실행합니다. `make docker-up` 데이터베이스 외에 `CUBRID_TEST_URL`과 `CUBRID_DASHBOARD_TEST_URL`에 전용 빈 CUBRID 데이터베이스 두 개가 필요하며, 연결할 수 없거나 건너뛴 테스트·빠진 패키지가 있으면 실패하고, 결과를 `.live-evidence/`에 기록합니다. 데이터베이스를 띄우는 방법은 [CONTRIBUTING.md](https://github.com/cubrid-lab/cubrid-cookbook-python/blob/main/CONTRIBUTING.md#live-verification)를 참고하세요.
+
+### 고급: 디버깅용 레인
+
+바꾼 예제만 확인하려면 부분 레인을 실행하세요. 부분 레인은 `PARTIAL: ...` 줄을 출력합니다. 통과해도 전체 검증이 아니며, 전체 검증은 완전한 `make verify`뿐입니다.
+
+```bash
+make verify-goldens           # 골든 기반 모든 예제를 로컬 CUBRID에 대해 실행 (VERIFY_PATHS=<dir>로 범위 축소)
+```
+
+`make verify-goldens`는 예제 요구 패키지가 빠져 있으면 "run `make deps` first"를 출력하고 바로 멈추며, 스크립트마다 `VERIFY_TIMEOUT`초(기본 60)로 실행 시간을 제한하고, 결과를 통과·불일치(mismatch)·실행 오류·타임아웃·정규화/읽기 오류·건너뜀으로 구분해 보고합니다. 테스트 묶음 레인(`make verify-web`, `make verify-ai-agent` 등)은 [CONTRIBUTING.md](https://github.com/cubrid-lab/cubrid-cookbook-python/blob/main/CONTRIBUTING.md#advanced-debugging-lanes)에 있습니다.
 
 ## 다음 단계
 

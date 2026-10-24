@@ -75,7 +75,7 @@ clean: ## Remove generated files, caches and test results (never Docker containe
 		-type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune \
 		-exec rm -rf {} +
 
-##@ Offline tests (no database, no Docker)
+##@ Offline tests (run first; no database, no Docker; results in test-results/test/)
 
 test: ## Run every offline suite, each in its own process (suite list: scripts/run_offline_tests.py)
 	$(PYTHON) scripts/run_offline_tests.py
@@ -89,7 +89,7 @@ agent-eval-check: ## Validate the agent-evals tasks and re-grade their fixtures 
 	$(PYTHON) scripts/agent_eval.py validate
 	$(PYTHON) scripts/agent_eval.py check
 
-##@ Live verification (needs CUBRID, see CONTRIBUTING.md "Live verification")
+##@ Live verification (run after make test; needs CUBRID, see CONTRIBUTING.md "Live verification")
 
 # `make verify` is always the full live verification (scripts/live_gate.py all),
 # always gated: an ambient CUBRID_LIVE_GATE=0 cannot turn it into a skip-tolerant
@@ -100,6 +100,8 @@ ifeq ($(origin VERIFY_PATHS),command line)
 	@echo "ERROR: make verify always runs the full verification and takes no VERIFY_PATHS; for the partial golden check run: make verify-goldens VERIFY_PATHS=$(VERIFY_PATHS)" >&2; exit 2
 endif
 	CUBRID_LIVE_GATE=1 $(PYTHON) scripts/live_gate.py --gate all
+
+##@ Advanced / debugging lanes (partial: each prints PARTIAL, only make verify is the full verification)
 
 verify-goldens: check-coverage ## Compare example outputs with their goldens (VERIFY_PATHS=<dirs> scopes the search roots, a partial check; VERIFY_TIMEOUT limits each script)
 	@PYTHON="$(PYTHON)" NORMALIZE="$(NORMALIZE)" VERIFY_TIMEOUT="$(VERIFY_TIMEOUT)" bash scripts/verify_goldens.sh $(VERIFY_PATHS)
@@ -129,7 +131,7 @@ demo: docker-up verify-goldens ## Demo: start DB, compare every example with its
 	@echo ""
 	@echo "✓ Demo complete — all examples verified against CUBRID"
 
-##@ Quality checks (no tests; make check test is the full offline gate)
+##@ Quality checks (no tests; make check test is the documented pre-PR command)
 
 check: lint format-check check-docs check-coverage ## Non-test quality gate: lint, format-check, check-docs, check-coverage
 

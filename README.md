@@ -176,6 +176,8 @@ make docker-down    # stop it; the database stays in the Docker volumes
 make docker-clean   # DESTRUCTIVE: delete the containers and volumes, database included
 ```
 
+Validate a checkout with the standard sequence, `make test` (offline, results in `test-results/test/`) and then `make verify` (the complete live validation, see [CONTRIBUTING.md](CONTRIBUTING.md#live-verification)). The focused `verify-*` lanes are for debugging, print `PARTIAL`, and are listed under [Advanced debugging lanes](CONTRIBUTING.md#advanced-debugging-lanes).
+
 `make up` and `make down` remain aliases of `make docker-up` and `make docker-down`.
 The broker listens on `127.0.0.1` only. `CUBRID_TEST_PORT` publishes it on another
 host port, but the examples connect to `33000`, so leave it unset for them.

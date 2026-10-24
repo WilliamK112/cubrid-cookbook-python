@@ -157,7 +157,10 @@ not checked, so do not add foreign closing keywords there.
 
 ## Validation
 
-- `make check test` from the repository root (offline contributor checks, as CI runs them)
+- `make check test` from the repository root (offline contributor checks, as CI runs them; the
+  documented pre-PR command, `make check` stays contributor-facing as part of it)
+- Standard sequence: `make test` (offline), then `make verify` (complete live validation); the
+  focused lanes below are advanced / debugging lanes and print `PARTIAL`
 - `make check` (non-test quality gate: `lint`, `format-check`, `check-docs`, `check-coverage`;
   changes no file); `make format` is the only target that rewrites files
 - `make test` (every offline suite, including `test-normalize`; no database or Docker;
@@ -168,7 +171,7 @@ not checked, so do not add foreign closing keywords there.
 - Run the relevant example: `python <file>.py`
 - `make verify-goldens VERIFY_PATHS=<example-directory>` for matching live goldens (a partial
   check; `make verify` refuses `VERIFY_PATHS`)
-- A focused live lane (`make verify-quickstart`, `verify-performance`, `verify-web`,
+- Advanced / debugging: a focused live lane (`make verify-quickstart`, `verify-performance`, `verify-web`,
   `verify-django-celery`, `verify-ai-agent`, `verify-dashboard`) or the full `make verify`
   (every golden and live suite; needs dedicated `CUBRID_TEST_URL` and
   `CUBRID_DASHBOARD_TEST_URL` databases, see CONTRIBUTING.md "Live verification")
