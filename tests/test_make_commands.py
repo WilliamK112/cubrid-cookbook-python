@@ -802,7 +802,7 @@ class MakeTargetSemanticsTests(unittest.TestCase):
         )
         self.assertEqual(listed.returncode, 0, listed.stderr)
         commands = listed.stdout.splitlines()
-        self.assertIn("bash scripts/test_normalize_output.sh", commands)
+        self.assertIn("bash tests/test_normalize_output.sh", commands)
         self.assertIn(
             f"{sys.executable} -m unittest discover -s tests -p test_make_commands.py -v",
             commands,

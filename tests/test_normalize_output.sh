@@ -9,7 +9,7 @@
 # Usage: bash scripts/test_normalize_output.sh
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../scripts" && pwd)"
 NORMALIZE="bash ${SCRIPT_DIR}/normalize_output.sh"
 
 fail_count=0
